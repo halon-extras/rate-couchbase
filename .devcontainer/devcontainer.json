@@ -1,0 +1,20 @@
+{
+	"name": "rate-couchbase",
+	"dockerComposeFile": [
+		"docker-compose.yaml"
+	],
+	"workspaceFolder": "/rate-couchbase",
+	"service": "halon-smtpd",
+	"overrideCommand": false,
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"halon.vscode-halon",
+				"halon.hsl-syntax",
+				"halon.hsl-linter",
+				"halon.hsl-debug",
+				"ms-vscode.cpptools-extension-pack"
+			]
+		}
+	}
+}

@@ -1,0 +1,102 @@
+import { Couchbase } from "extras://couchbase";
+
+function rate_get_counter($couchbase, $key) {
+    $response = $couchbase->get($key);
+
+    if ($response["error"]) {
+        if ($response["error"]["code"] == 101)
+            return 0;
+        throw Exception(json_encode($response["error"]));
+    }
+
+    return number($response["result"]);
+}
+
+function rate_fixed_window($namespace, $entry, $count, $interval, $options = []) {
+    if (isset($options["profile"]))
+        $couchbase = Couchbase($options["profile"], $options["bucket"]);
+    else
+        $couchbase = Couchbase();
+
+    $window = floor(time() / $interval);
+    $key = "$namespace:$entry:$window";
+
+    if ($count === 0) {
+        return rate_get_counter($couchbase, $key);
+    }
+
+    $current = $couchbase->increment($key, 1, [ "initial" => 1, "expiry" => $interval * 2 ]);
+
+    if ($current["error"])
+        throw Exception(json_encode($current["error"]));
+
+    return $current["result"] <= $count;
+}
+
+function rate_sliding_window($namespace, $entry, $count, $interval, $options = []) {
+    if (isset($options["profile"]))
+        $couchbase = Couchbase($options["profile"], $options["bucket"]);
+    else
+        $couchbase = Couchbase();
+
+    $time = time();
+    $single_key = "$namespace:$entry:sliding:1";
+
+    if ($count === 1) {
+        // Couchbase keeps a relative TTL visible through its final whole second.
+        $single_expiry = $interval - 1;
+        if ($single_expiry < 1)
+            $single_expiry = 1;
+        $single = $couchbase->increment($single_key, 1, [ "initial" => 1, "expiry" => $single_expiry ]);
+
+        if ($single["error"])
+            throw Exception(json_encode($single["error"]));
+
+        if ($single["result"] === 1)
+            return true;
+
+        return false;
+    }
+
+    $bucket_count = 10;
+    $bucket_interval = $interval / $bucket_count;
+    $current_window = floor($time / $bucket_interval);
+    $key_prefix = "$namespace:$entry:sliding:$bucket_count";
+    $current_key = "$key_prefix:$current_window";
+
+    $elapsed = ($time % $bucket_interval) / $bucket_interval;
+    $estimated_count = 0;
+    $offset = 1;
+    while ($offset < $bucket_count) {
+        $previous_key = "$key_prefix:" . ($current_window - $offset);
+        $estimated_count += rate_get_counter($couchbase, $previous_key);
+        $offset++;
+    }
+
+    $oldest_key = "$key_prefix:" . ($current_window - $bucket_count);
+    $estimated_count += rate_get_counter($couchbase, $oldest_key) * (1 - $elapsed);
+
+    if ($count === 0) {
+        $single_count = rate_get_counter($couchbase, $single_key);
+        if ($single_count > 0)
+            $single_count = 1;
+        $current_count = rate_get_counter($couchbase, $current_key);
+        return $single_count + $estimated_count + $current_count;
+    }
+
+    $current = $couchbase->increment($current_key, 1, [ "initial" => 1, "expiry" => $interval * 2 ]);
+
+    if ($current["error"])
+        throw Exception(json_encode($current["error"]));
+
+    if (($estimated_count + $current["result"]) <= $count)
+        return true;
+
+    // A denied request must not keep the sliding window full.
+    $rollback = $couchbase->decrement($current_key, 1);
+
+    if ($rollback["error"])
+        throw Exception(json_encode($rollback["error"]));
+
+    return false;
+}
