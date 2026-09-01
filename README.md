@@ -56,4 +56,4 @@ if (rate("outbound", $connection["auth"]["username"], 3, 60) == false) {
 
 ### rate_sliding_window(namespace, entry, count, interval [, options])
 
-Works the same as the `rate` function but uses a sliding window instead of a fixed window.
+Works the same as the `rate_fixed_window` function but uses a sliding window instead of a fixed window.
