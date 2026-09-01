@@ -12,8 +12,7 @@
 				"halon.vscode-halon",
 				"halon.hsl-syntax",
 				"halon.hsl-linter",
-				"halon.hsl-debug",
-				"ms-vscode.cpptools-extension-pack"
+				"halon.hsl-debug"
 			]
 		}
 	}

@@ -1,4 +1,4 @@
-version: "5.8"
+version: "6.11"
 servers:
   - id: default
     listeners:
@@ -16,9 +16,14 @@ environment:
   umask: "0027"
   rlimit:
     nofile: 70000
+scripting:
+  rootpath: /rate-couchbase
 plugins:
   - id: couchbase
     config:
+      default:
+        profile: couchbase-database
+        bucket: halon
       profiles:
         - id: couchbase-database
           connection_string: couchbase://couchbase

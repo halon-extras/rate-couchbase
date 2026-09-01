@@ -1,0 +1,30 @@
+import { rate_sliding_window, rate_fixed_window } from "file://main.hsl";
+
+$time = 30;
+$item = 2;
+$interval = 2;
+
+$x = 0;
+$t = time();
+while ((time() - $t) < $time)
+{
+    if (rate_fixed_window("foo", "bar", $item, $interval))
+    {
+        $x++;
+        echo $x . " during " .  (time() - $t) . "s   " . ($x / (time() - $t));
+    }
+    sleep(0.01);
+}
+echo "--";
+
+$x = 0;
+$t = time();
+while ((time() - $t) < $time)
+{
+    if (rate_sliding_window("foo", "bar", $item, $interval))
+    {
+        $x++;
+        echo $x . " during " .  (time() - $t) . "s   " . ($x / (time() - $t));
+    }
+    sleep(0.01);
+}

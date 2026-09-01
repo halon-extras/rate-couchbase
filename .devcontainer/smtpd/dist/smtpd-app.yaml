@@ -2,7 +2,39 @@ resolver:
   cache:
     size: 10000
 scripting:
-  files: []
+  files:
+  - data: |
+      import { rate_sliding_window, rate_fixed_window } from "file://main.hsl";
+
+      $time = 30;
+      $item = 2;
+      $interval = 2;
+
+      $x = 0;
+      $t = time();
+      while ((time() - $t) < $time)
+      {
+          if (rate_fixed_window("foo", "bar", $item, $interval))
+          {
+              $x++;
+              echo $x . " during " .  (time() - $t) . "s   " . ($x / (time() - $t));
+          }
+          sleep(0.01);
+      }
+      echo "--";
+
+      $x = 0;
+      $t = time();
+      while ((time() - $t) < $time)
+      {
+          if (rate_sliding_window("foo", "bar", $item, $interval))
+          {
+              $x++;
+              echo $x . " during " .  (time() - $t) . "s   " . ($x / (time() - $t));
+          }
+          sleep(0.01);
+      }
+    id: test.hsl
 servers:
 - id: default
   transport: mx
@@ -24,4 +56,4 @@ transportgroups:
     session:
       tls:
         mode: dane
-version: '5.8'
+version: '6.11'

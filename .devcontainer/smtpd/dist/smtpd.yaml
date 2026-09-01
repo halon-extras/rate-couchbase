@@ -12,15 +12,20 @@ environment:
     version: 4
 plugins:
 - config:
+    default:
+      bucket: halon
+      profile: couchbase-database
     profiles:
     - connection_string: couchbase://couchbase
       id: couchbase-database
       password: password
       username: Administrator
   id: couchbase
+scripting:
+  rootpath: /rate-couchbase
 servers:
 - id: default
   listeners:
   - address: 127.0.0.1
     port: 25
-version: '5.8'
+version: '6.11'
