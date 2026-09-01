@@ -37,7 +37,7 @@ Check or account for the rate of `entry` in `namespace` during the last `interva
 - count `number` - The count
 - interval `number` - The interval in seconds
 - options `array` - The options
-  - connection `string` - The `couchbase` plugin profile
+  - profile `string` - The `couchbase` plugin profile
   - bucket `string` - The `couchbase` plugin bucket
 
 **Returns**
